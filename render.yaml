@@ -1,0 +1,28 @@
+services:
+  - name: my-laravel-app
+    type: web
+    runtime: docker  # Utilisation de Docker pour une meilleure compatibilité PHP
+    region: oregon  # Remplace par la région que tu veux
+    plan: free  # Ou change en "starter", "standard" selon tes besoins
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        sync: false  # Assure-toi de générer une clé avec `php artisan key:generate`
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        value: mfg  # Remplace avec ton vrai host PostgreSQL
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        value: conferenceapp
+      - key: DB_USERNAME
+        value: mfg
+      - key: DB_PASSWORD
+        sync: false  # Ajoute ton mot de passe DB dans l'interface Render
+    buildCommand: "./render-build.sh"
+    startCommand: "php-fpm -D && nginx -g 'daemon off;'"
+    autoDeploy: true
