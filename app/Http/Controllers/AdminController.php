@@ -22,11 +22,11 @@ class AdminController extends Controller
 
         if ($request->filled('date')) {
             $query->whereHas('conference', function($q) use ($request) {
-                $q->where('date', $request->date);
+                $q->whereDate('date', $request->date); // Utilisation de whereDate pour PostgreSQL
             });
         }
 
-        // On paginate les résultats
+        // Paginer les résultats
         $participants = $query->orderBy('id', 'desc')->paginate(10);
 
         return view('admin.dashboard', compact('participants', 'conferences'));
@@ -37,11 +37,11 @@ class AdminController extends Controller
      */
     public function exportCSV(Request $request)
     {
-        // Reproduire la même logique de filtrage
+        // Appliquer le même filtre que dans le dashboard
         $query = Participant::with('conference');
         if ($request->filled('date')) {
             $query->whereHas('conference', function($q) use ($request) {
-                $q->where('date', $request->date);
+                $q->whereDate('date', $request->date); // whereDate pour s'assurer que seule la date est comparée
             });
         }
         $participants = $query->orderBy('id', 'desc')->get();
@@ -49,7 +49,7 @@ class AdminController extends Controller
         $filename = 'participants_' . now()->format('Ymd_His') . '.csv';
 
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-Type"        => "text/csv; charset=UTF-8",
             "Content-Disposition" => "attachment; filename={$filename}",
             "Pragma"              => "no-cache",
             "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
@@ -60,6 +60,9 @@ class AdminController extends Controller
 
         $callback = function() use ($participants, $columns) {
             $file = fopen('php://output', 'w');
+            // Forcer l'encodage en UTF-8
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // Ajoute un BOM UTF-8 pour éviter les problèmes d'affichage
+
             fputcsv($file, $columns);
 
             foreach ($participants as $participant) {
