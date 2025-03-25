@@ -1,9 +1,18 @@
-# Utiliser l'image PHP officielle avec les extensions nécessaires
+# Étape 1: Builder les assets
+FROM node:18 as node
+
+WORKDIR /var/www/html
+COPY package.json webpack.mix.js ./
+COPY resources ./resources
+
+RUN npm install && npm run prod
+
+# Étape 2: Image PHP
 FROM php:8.2-fpm
 
-# Installer les dépendances système (corrigé)
 RUN apt-get update && \
     apt-get install -y \
+        nginx \
         unzip \
         curl \
         libpng-dev \
@@ -14,23 +23,21 @@ RUN apt-get update && \
     docker-php-ext-install gd pdo pdo_mysql pdo_pgsql && \
     rm -rf /var/lib/apt/lists/*
 
+# Configuration Nginx
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+
 # Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Définir le répertoire de travail
 WORKDIR /var/www/html
-
-# Copier le projet dans le conteneur
 COPY . .
+COPY --from=node /var/www/html/public/js ./public/js
+COPY --from=node /var/www/html/public/css ./public/css
 
-# Installer les dépendances Laravel
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader && \
+    chown -R www-data:www-data /var/www/html/storage && \
+    chmod -R 775 /var/www/html/storage
 
-# Donner les permissions aux fichiers nécessaires
-RUN chmod -R 777 storage bootstrap/cache
+EXPOSE 80
 
-# Exposer le port
-EXPOSE 9000
-
-# Lancer PHP-FPM
-CMD ["php-fpm"]
+CMD bash -c "php-fpm -D && nginx -g 'daemon off;'"
