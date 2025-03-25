@@ -1,20 +1,22 @@
 services:
   - name: my-laravel-app
     type: web
-    runtime: docker  # Utilisation de Docker pour Laravel
+    env: docker
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: APP_ENV
         value: production
+      - key: APP_KEY
+        sync: false
       - key: DB_CONNECTION
-        value: pgsql  # Si tu utilises PostgreSQL
+        value: pgsql
       - key: DB_HOST
-        value: your-db-host
+        value: mfg
       - key: DB_PORT
         value: 5432
       - key: DB_DATABASE
-        value: conferenceapp
+        value: Conferenceapp
       - key: DB_USERNAME
         value: mfg
       - key: DB_PASSWORD
-        sync: false  # Mets ton mot de passe dans l’interface Render
-    startCommand: "php artisan migrate --force && php artisan serve --host 0.0.0.0 --port $PORT"
+        sync: false
