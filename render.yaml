@@ -3,15 +3,21 @@ services:
     type: web
     env: docker
     dockerfilePath: ./Dockerfile
+    buildCommand: "./render-build.sh"
+    startCommand: "php artisan serve --host 0.0.0.0 --port $PORT"
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_KEY
-        sync: false
+        sync: false  # Ajoute la clé générée avec php artisan key:generate
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://https://conferenceapp.onrender.com/ # Remplace avec ton URL Render
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: mfg
+        value: DATABASE_HOST  # Vérifie le host fourni par Render
       - key: DB_PORT
         value: 5432
       - key: DB_DATABASE
@@ -19,4 +25,12 @@ services:
       - key: DB_USERNAME
         value: mfg
       - key: DB_PASSWORD
-        sync: false
+        sync: false  # Ajoute le mot de passe dans l'interface Render
+      - key: SESSION_DRIVER
+        value: database
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_DRIVER
+        value: file
+      - key: LOG_CHANNEL
+        value: stack
